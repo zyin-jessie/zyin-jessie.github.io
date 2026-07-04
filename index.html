@@ -517,7 +517,8 @@
       if (p.startsWith('-')) {
         const flag = p.replace(/^-+/, '');
         if (i + 1 < parts.length && !parts[i + 1].startsWith('-')) {
-          result[flag] = parts[i + 1].replace(/^"|"$/g, '');
+          let val = parts[i + 1].replace(/^"|"$/g, '');
+          result[flag] = /^\d+$/.test(val) ? Number(val) : val;
           i += 2;
         } else {
           result[flag] = true;
