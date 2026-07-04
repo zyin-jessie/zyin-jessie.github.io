@@ -45,6 +45,8 @@ let currentLevel = 0;
 let totalScore = 0;
 let levelAttempts = 0;
 let hintUsed = false;
+const cmdHistory = [];
+let historyIdx = -1;
 
 const scoreVal = document.getElementById('score-val');
 const output = document.getElementById('output');
@@ -241,6 +243,8 @@ function handleSubmit() {
   if (!raw) return;
 
   addLine('info', `$ ${raw}`);
+  cmdHistory.push(raw);
+  historyIdx = cmdHistory.length;
 
   const cmd = parseCommand(raw);
 
@@ -269,13 +273,13 @@ function handleSubmit() {
   levelAttempts++;
 
   if (cmd.t) {
-    if (cmd.t === 'ed25519') addBadge('good', 'ed25519 ✓');
+    if (cmd.t === 'ed25519') addBadge('good', 'ed25519');
     else if (cmd.t === 'rsa') addBadge('good', 'RSA');
     else if (cmd.t === 'ecdsa') addBadge('info', 'ECDSA');
     else if (cmd.t === 'dsa') addBadge('err', 'DSA — deprecated!');
   }
   if (cmd.b) {
-    if (cmd.b >= 4096) addBadge('good', `${cmd.b}-bit ✓`);
+    if (cmd.b >= 4096) addBadge('good', `${cmd.b}-bit`);
     else if (cmd.b >= 2048) addBadge('info', `${cmd.b}-bit`);
     else addBadge('err', `${cmd.b}-bit — too weak!`);
   }
@@ -285,7 +289,7 @@ function handleSubmit() {
     else addBadge('err', 'passphrase too short');
   }
   if (cmd.a) {
-    if (cmd.a >= 100) addBadge('good', `rounds ${cmd.a} ✓`);
+    if (cmd.a >= 100) addBadge('good', `rounds ${cmd.a}`);
     else if (cmd.a >= 64) addBadge('warn', `rounds ${cmd.a} (ok)`);
     else addBadge('info', `rounds ${cmd.a}`);
   }
@@ -328,7 +332,24 @@ function handleSubmit() {
 
 submitBtn.addEventListener('click', handleSubmit);
 input.addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleSubmit();
+  if (e.key === 'Enter') {
+    handleSubmit();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (historyIdx > 0) {
+      historyIdx--;
+      input.value = cmdHistory[historyIdx];
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (historyIdx < cmdHistory.length - 1) {
+      historyIdx++;
+      input.value = cmdHistory[historyIdx];
+    } else {
+      historyIdx = cmdHistory.length;
+      input.value = '';
+    }
+  }
 });
 
 hintBtn.addEventListener('click', () => {
